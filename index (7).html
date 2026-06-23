@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Bike — Project 32</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808;
+      --gold: #C9A84C;
+      --gold-bright: #F0C040;
+      --gold-dim: #6B5520;
+      --white: #F5F5F0;
+      --grey: #1A1A1A;
+      --grey-mid: #2A2A2A;
+      --text-muted: #888;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.4rem 3rem;
+      background: linear-gradient(to bottom, rgba(8,8,8,0.95), transparent);
+      transition: background 0.3s;
+    }
+    nav.scrolled { background: rgba(8,8,8,0.98); }
+    .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.15em; color:var(--gold); text-decoration:none; }
+    .nav-links { display:flex; gap:2.5rem; list-style:none; }
+    .nav-links a { font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--white); text-decoration:none; opacity:0.7; transition:opacity 0.2s,color 0.2s; }
+    .nav-links a:hover { opacity:1; color:var(--gold); }
+
+    /* HERO */
+    .hero {
+      position:relative; height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      overflow:hidden; text-align:center;
+    }
+    .hero-bg {
+      position:absolute; inset:0;
+      background-image: url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193448/bike1_a9qbt0.jpg');
+      background-size:cover; background-position:center;
+      filter:brightness(0.3) contrast(1.2);
+      transform:scale(1.05);
+    }
+    .hero-overlay {
+      position:absolute; inset:0;
+      background:
+        radial-gradient(ellipse 60% 50% at 50% 65%, rgba(201,168,76,0.18) 0%, transparent 70%),
+        linear-gradient(to bottom, rgba(8,8,8,0.5) 0%, transparent 40%, rgba(8,8,8,0.7) 100%);
+    }
+    .hero-spotlight {
+      position:absolute; top:0; left:50%; transform:translateX(-50%);
+      width:3px; height:85%;
+      background:linear-gradient(to bottom, rgba(201,168,76,0.8), transparent);
+      filter:blur(50px); pointer-events:none;
+    }
+    .hero-content { position:relative; z-index:2; }
+    .hero-eyebrow { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--gold); margin-bottom:1.5rem; opacity:0.9; }
+    .hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(5rem,14vw,13rem); line-height:0.9; letter-spacing:0.04em; color:var(--white); }
+    .hero-title span { display:block; color:var(--gold); font-size:clamp(3rem,8vw,7rem); }
+    .hero-sub { margin-top:2rem; font-size:0.9rem; letter-spacing:0.15em; color:var(--text-muted); text-transform:uppercase; }
+    .hero-cta {
+      margin-top:3rem; display:inline-block; padding:1rem 3rem;
+      border:1px solid var(--gold); color:var(--gold);
+      font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.25em; text-transform:uppercase;
+      text-decoration:none; transition:background 0.3s,color 0.3s;
+    }
+    .hero-cta:hover { background:var(--gold); color:var(--black); }
+    .scroll-hint {
+      position:absolute; bottom:2.5rem; left:50%; transform:translateX(-50%);
+      display:flex; flex-direction:column; align-items:center; gap:0.5rem; z-index:2; opacity:0.4;
+    }
+    .scroll-hint span { font-family:'Space Mono',monospace; font-size:0.55rem; letter-spacing:0.3em; text-transform:uppercase; }
+    .scroll-line { width:1px; height:50px; background:linear-gradient(to bottom, var(--gold), transparent); animation:scrollDown 2s infinite; }
+    @keyframes scrollDown {
+      0% { transform:scaleY(0); transform-origin:top; }
+      50% { transform:scaleY(1); transform-origin:top; }
+      51% { transform:scaleY(1); transform-origin:bottom; }
+      100% { transform:scaleY(0); transform-origin:bottom; }
+    }
+
+    /* STATEMENT */
+    .statement { padding:8rem 3rem; text-align:center; max-width:900px; margin:0 auto; }
+    .statement p { font-size:clamp(1.4rem,3vw,2.2rem); font-weight:300; line-height:1.5; color:var(--white); opacity:0.85; }
+    .statement p em { font-style:normal; color:var(--gold); }
+    .divider { width:60px; height:1px; background:var(--gold-dim); margin:4rem auto; }
+
+    /* PRESENTATION */
+    .presentation { padding:0 0 8rem; background:var(--black); }
+    .presentation-intro { max-width:800px; margin:0 auto; text-align:center; padding:6rem 3rem 5rem; }
+    .presentation-intro h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,7vw,6.5rem); letter-spacing:0.06em; line-height:1; color:var(--white); margin-bottom:2rem; }
+    .presentation-intro h2 span { color:var(--gold); }
+    .presentation-intro p { font-size:1.05rem; line-height:1.9; color:var(--text-muted); font-weight:300; }
+    .presentation-intro p strong { color:var(--white); font-weight:500; }
+    .pres-blocks { display:grid; grid-template-columns:1fr 1fr; max-width:1200px; margin:0 auto; padding:0 3rem; gap:2px; }
+    .pres-block { background:var(--grey); padding:3.5rem; position:relative; overflow:hidden; }
+    .pres-block::before { content:''; position:absolute; top:0; left:0; width:2px; height:100%; background:linear-gradient(to bottom, var(--gold), transparent); }
+    .pres-block-icon { font-family:'Bebas Neue',sans-serif; font-size:4rem; color:var(--gold); opacity:0.2; line-height:1; margin-bottom:1.5rem; }
+    .pres-block h3 { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:0.08em; color:var(--white); margin-bottom:1.2rem; }
+    .pres-block p { font-size:0.88rem; line-height:1.9; color:var(--text-muted); }
+    .pres-block p strong { color:var(--gold); font-weight:500; }
+    .pres-full { max-width:1200px; margin:2px auto 0; padding:0 3rem; }
+    .pres-full-inner { background:var(--grey); padding:4rem; display:grid; grid-template-columns:1fr 2fr; gap:4rem; align-items:center; position:relative; overflow:hidden; }
+    .pres-full-inner::after { content:'32'; position:absolute; right:-2rem; bottom:-3rem; font-family:'Bebas Neue',sans-serif; font-size:18rem; color:var(--gold); opacity:0.04; line-height:1; pointer-events:none; }
+    .pres-full-left h3 { font-family:'Bebas Neue',sans-serif; font-size:2.5rem; letter-spacing:0.06em; color:var(--white); line-height:1.1; margin-bottom:1rem; }
+    .pres-full-left h3 span { color:var(--gold); }
+    .pres-full-left p { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; color:var(--gold); text-transform:uppercase; opacity:0.7; }
+    .pres-full-right p { font-size:0.92rem; line-height:2; color:var(--text-muted); margin-bottom:1.2rem; }
+    .pres-full-right p strong { color:var(--white); font-weight:500; }
+    .pres-stats { max-width:1200px; margin:2px auto 0; padding:0 3rem; display:grid; grid-template-columns:repeat(4,1fr); gap:2px; }
+    .pres-stat { background:var(--grey-mid); padding:2.5rem; text-align:center; }
+    .pres-stat-num { font-family:'Bebas Neue',sans-serif; font-size:3.5rem; color:var(--gold); line-height:1; margin-bottom:0.5rem; }
+    .pres-stat-label { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text-muted); }
+
+    /* GALLERY */
+    #galerie { padding:4rem 0 8rem; }
+    .section-label { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.4em; text-transform:uppercase; color:var(--gold); text-align:center; margin-bottom:4rem; opacity:0.8; }
+
+    .gallery-masonry {
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: 60px;
+      gap: 3px;
+      padding: 0 3px;
+      margin-top: 2rem;
+    }
+    .gal-item { overflow:hidden; cursor:pointer; position:relative; }
+    .gal-item img { width:100%; height:100%; object-fit:cover; display:block; filter:brightness(0.82) contrast(1.08); transition:filter 0.5s, transform 0.6s; }
+    .gal-item:hover img { filter:brightness(1.05) contrast(1.1); transform:scale(1.04); }
+    .gal-item .gal-label {
+      position:absolute; bottom:0; left:0; right:0;
+      padding:1rem 1.2rem;
+      background:linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+      font-family:'Space Mono',monospace; font-size:0.55rem; letter-spacing:0.2em; text-transform:uppercase;
+      color:rgba(201,168,76,0.85); opacity:0; transition:opacity 0.3s;
+    }
+    .gal-item:hover .gal-label { opacity:1; }
+
+    /* 9-image grid layout */
+    .g1  { grid-column:1/8;  grid-row:1/9;  }
+    .g2  { grid-column:8/13; grid-row:1/5;  }
+    .g3  { grid-column:8/11; grid-row:5/9;  }
+    .g4  { grid-column:11/13;grid-row:5/9;  }
+    .g5  { grid-column:1/5;  grid-row:9/15; }
+    .g6  { grid-column:5/9;  grid-row:9/15; }
+    .g7  { grid-column:9/13; grid-row:9/15; }
+    .g8  { grid-column:1/7;  grid-row:15/22;}
+    .g9  { grid-column:7/13; grid-row:15/22;}
+
+    /* PARALLAX BANNER */
+    .parallax-banner { position:relative; height:70vh; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .parallax-img {
+      position:absolute; inset:-20%; width:140%; height:140%;
+      background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike2_okhubr.jpg');
+      background-size:cover; background-position:center;
+      filter:brightness(0.35) contrast(1.2);
+      will-change:transform;
+    }
+    .parallax-text { position:relative; z-index:2; text-align:center; }
+    .parallax-text h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,8vw,8rem); letter-spacing:0.1em; color:var(--white); line-height:0.9; }
+    .parallax-text h2 span { color:var(--gold); }
+    .parallax-text p { margin-top:1.5rem; font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; color:rgba(201,168,76,0.7); }
+
+    /* SPECS */
+    #specs { padding:8rem 3rem; max-width:1100px; margin:0 auto; }
+    .specs-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:5rem; border-bottom:1px solid var(--grey-mid); padding-bottom:2rem; }
+    .specs-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,6vw,6rem); letter-spacing:0.05em; color:var(--white); line-height:1; }
+    .specs-title span { color:var(--gold); }
+    .specs-badge { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; color:var(--gold); border:1px solid var(--gold-dim); padding:0.5rem 1rem; text-transform:uppercase; }
+    .specs-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .spec-row { display:flex; justify-content:space-between; align-items:center; padding:1.4rem 0; border-bottom:1px solid var(--grey-mid); }
+    .spec-row:nth-child(odd) { padding-right:4rem; }
+    .spec-row:nth-child(even) { padding-left:4rem; border-left:1px solid var(--grey-mid); }
+    .spec-key { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); }
+    .spec-val { font-size:0.9rem; font-weight:500; color:var(--white); text-align:right; }
+    .spec-val.gold { color:var(--gold); }
+
+    /* SELLING POINTS */
+    #pourquoi { background:var(--grey); padding:8rem 3rem; }
+    .points-inner { max-width:1100px; margin:0 auto; }
+    .points-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3rem; margin-top:4rem; }
+    .point { border-top:1px solid var(--gold-dim); padding-top:2rem; }
+    .point-num { font-family:'Bebas Neue',sans-serif; font-size:3.5rem; color:var(--gold); opacity:0.3; line-height:1; margin-bottom:1rem; }
+    .point-title { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.08em; color:var(--white); margin-bottom:1rem; }
+    .point p { font-size:0.85rem; line-height:1.8; color:var(--text-muted); }
+
+    /* QUOTE */
+    .quote-section { padding:10rem 3rem; text-align:center; position:relative; overflow:hidden; }
+    .quote-section::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 60% at 50% 50%, rgba(201,168,76,0.06) 0%, transparent 70%); }
+    .quote-mark { font-family:'Bebas Neue',sans-serif; font-size:8rem; color:var(--gold); opacity:0.15; line-height:0.5; margin-bottom:2rem; }
+    blockquote { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,5vw,4rem); letter-spacing:0.06em; line-height:1.2; color:var(--white); max-width:900px; margin:0 auto; }
+    blockquote em { font-style:normal; color:var(--gold); }
+    cite { display:block; margin-top:2.5rem; font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.3em; color:var(--text-muted); text-transform:uppercase; font-style:normal; }
+
+    /* CONTACT */
+    #contact { background:var(--grey); padding:8rem 3rem; }
+    .contact-inner { max-width:700px; margin:0 auto; text-align:center; }
+    .contact-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,6vw,5rem); letter-spacing:0.06em; color:var(--white); margin-bottom:1.5rem; }
+    .contact-title span { color:var(--gold); }
+    .contact-sub { font-size:0.9rem; line-height:1.8; color:var(--text-muted); margin-bottom:3rem; }
+    .contact-email { display:inline-block; font-family:'Space Mono',monospace; font-size:0.9rem; letter-spacing:0.1em; color:var(--gold); text-decoration:none; border-bottom:1px solid var(--gold-dim); padding-bottom:0.3rem; transition:border-color 0.2s,color 0.2s; margin-bottom:3rem; }
+    .contact-email:hover { color:var(--gold-bright); border-color:var(--gold-bright); }
+    .contact-btn { display:inline-block; margin-top:2rem; padding:1.1rem 3.5rem; background:var(--gold); color:var(--black); font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.25em; text-transform:uppercase; text-decoration:none; font-weight:700; transition:background 0.3s,transform 0.2s; }
+    .contact-btn:hover { background:var(--gold-bright); transform:translateY(-2px); }
+    .contact-note { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text-muted); opacity:0.6; }
+
+    /* FOOTER */
+    footer { padding:3rem; display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--grey-mid); }
+    .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:0.15em; color:var(--gold); }
+    .footer-copy { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; color:var(--text-muted); opacity:0.5; }
+
+    /* LIGHTBOX */
+    .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.96); z-index:999; align-items:center; justify-content:center; flex-direction:column; }
+    .lightbox.active { display:flex; }
+    .lightbox img { max-width:90vw; max-height:85vh; object-fit:contain; }
+    .lightbox-close { position:absolute; top:2rem; right:2rem; font-family:'Space Mono',monospace; font-size:0.7rem; letter-spacing:0.2em; color:var(--white); cursor:pointer; opacity:0.6; transition:opacity 0.2s; }
+    .lightbox-close:hover { opacity:1; }
+    .lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); display:flex; justify-content:space-between; width:96%; padding:0 1rem; pointer-events:none; }
+    .lightbox-btn { pointer-events:all; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.3); color:var(--gold); font-family:'Space Mono',monospace; font-size:1.4rem; padding:0.8rem 1.2rem; cursor:pointer; transition:background 0.2s; }
+    .lightbox-btn:hover { background:rgba(201,168,76,0.3); }
+    .lightbox-counter { position:absolute; bottom:2rem; left:50%; transform:translateX(-50%); font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.3em; color:var(--text-muted); }
+
+    /* REVEAL */
+    .reveal { opacity:0; transform:translateY(30px); transition:opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .reveal-delay-1 { transition-delay:0.1s; }
+    .reveal-delay-2 { transition-delay:0.2s; }
+    .reveal-delay-3 { transition-delay:0.3s; }
+    .reveal-delay-4 { transition-delay:0.4s; }
+
+    /* PROGRESS BAR */
+    #progress-bar { position:fixed; top:0; left:0; height:2px; width:0; background:linear-gradient(to right, var(--gold-dim), var(--gold), var(--gold-bright)); z-index:999; transition:width 0.08s linear; }
+
+    /* CURSOR GLOW */
+    #cursor-glow { position:fixed; pointer-events:none; z-index:9998; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle, rgba(201,168,76,0.05) 0%, transparent 65%); transform:translate(-50%,-50%); transition:left 0.05s, top 0.05s; }
+
+    /* STATEMENT PHOTO BG */
+    .statement { position:relative; overflow:hidden; }
+    .statement-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike3_mu49ac.jpg'); background-size:cover; background-position:center; filter:brightness(0.07) contrast(1.4) saturate(0.5); z-index:0; transition:transform 0.1s ease-out; }
+    .statement > * { position:relative; z-index:1; }
+
+    /* PRES BLOCKS PHOTO BG */
+    .pres-block { transition:transform 0.35s cubic-bezier(.23,1,.32,1), box-shadow 0.35s; }
+    .pres-block:hover { transform:translateY(-6px); box-shadow:0 24px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(201,168,76,0.15); }
+    .pres-block-photo { position:absolute; inset:0; background-size:cover; background-position:center; opacity:0.07; filter:brightness(0.6) contrast(1.2) saturate(0.5); transition:opacity 0.5s; z-index:0; }
+    .pres-block:hover .pres-block-photo { opacity:0.15; }
+    .pres-block .pres-block-icon, .pres-block h3, .pres-block p { position:relative; z-index:1; }
+
+    /* SPECS PHOTO BG */
+    #specs { position:relative; overflow:hidden; }
+    #specs-photo-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike4_ap1gbc.jpg'); background-size:cover; background-position:center 30%; filter:brightness(0.06) contrast(1.4) saturate(0.3); z-index:0; }
+    #specs > * { position:relative; z-index:1; }
+    .spec-row { transition:background 0.25s, padding-left 0.25s; }
+    .spec-row:hover { background:rgba(201,168,76,0.05); }
+    .spec-row:hover .spec-key { color:var(--white); }
+
+    /* POURQUOI PHOTO BG */
+    #pourquoi { position:relative; overflow:hidden; }
+    #pourquoi-photo-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike5_rkanbu.jpg'); background-size:cover; background-position:center 20%; filter:brightness(0.1) contrast(1.3) saturate(0.4); z-index:0; }
+    #pourquoi > * { position:relative; z-index:1; }
+    .point { transition:transform 0.3s, border-color 0.3s; }
+    .point:hover { transform:translateY(-6px); border-color:var(--gold); }
+    .point:hover .point-num { opacity:0.7; }
+
+    /* QUOTE PHOTO BG */
+    .quote-section { position:relative; overflow:hidden; }
+    .quote-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike6_fxyap0.jpg'); background-size:cover; background-position:center; filter:brightness(0.08) contrast(1.4) saturate(0.4); z-index:0; }
+    .quote-section > * { position:relative; z-index:1; }
+
+    /* CONTACT PHOTO BG */
+    #contact { position:relative; overflow:hidden; }
+    #contact-photo-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike7_a3xbpw.jpg'); background-size:cover; background-position:center; filter:brightness(0.09) contrast(1.3) saturate(0.4); z-index:0; }
+    #contact > * { position:relative; z-index:1; }
+
+    /* NAV ACTIVE */
+    .nav-links a.active { color:var(--gold) !important; opacity:1 !important; }
+
+    /* GALLERY FADE IN */
+    .gallery-masonry.loaded .gal-item { animation:galFadeIn 0.5s ease both; }
+    .gallery-masonry.loaded .gal-item:nth-child(1){animation-delay:0s;}
+    .gallery-masonry.loaded .gal-item:nth-child(2){animation-delay:0.06s;}
+    .gallery-masonry.loaded .gal-item:nth-child(3){animation-delay:0.12s;}
+    .gallery-masonry.loaded .gal-item:nth-child(4){animation-delay:0.18s;}
+    .gallery-masonry.loaded .gal-item:nth-child(5){animation-delay:0.24s;}
+    .gallery-masonry.loaded .gal-item:nth-child(6){animation-delay:0.30s;}
+    .gallery-masonry.loaded .gal-item:nth-child(7){animation-delay:0.36s;}
+    .gallery-masonry.loaded .gal-item:nth-child(8){animation-delay:0.42s;}
+    .gallery-masonry.loaded .gal-item:nth-child(9){animation-delay:0.48s;}
+    @keyframes galFadeIn { from{opacity:0;transform:scale(0.97);} to{opacity:1;transform:scale(1);} }
+
+    /* LIGHTBOX FADE */
+    .lightbox.active { animation:lbFadeIn 0.25s ease; }
+    @keyframes lbFadeIn { from{opacity:0;} to{opacity:1;} }
+
+    /* HERO MOUSE TILT — smooth reset */
+    .hero-content { transition:transform 0.6s cubic-bezier(.23,1,.32,1); }
+
+    /* VIDEO SECTION */
+    #video { padding: 8rem 3rem; background: var(--black); position: relative; overflow: hidden; }
+    #video-photo-bg { position:absolute; inset:0; background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike8_l5d7ki.jpg'); background-size:cover; background-position:center; filter:brightness(0.05) contrast(1.4) saturate(0.3); z-index:0; }
+    #video > * { position: relative; z-index: 1; }
+    .video-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
+    .video-inner h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,7vw,6rem); letter-spacing:0.06em; color:var(--white); margin-bottom:0.5rem; }
+    .video-inner h2 span { color:var(--gold); }
+    .video-inner .video-sub { font-family:'Space Mono',monospace; font-size:0.65rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--text-muted); margin-bottom:3.5rem; }
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      border: 1px solid var(--gold-dim);
+      background: #000;
+      box-shadow: 0 0 80px rgba(201,168,76,0.08), 0 40px 80px rgba(0,0,0,0.6);
+    }
+    .video-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; right: -1px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+    }
+    .video-wrapper video {
+      width: 100%;
+      display: block;
+      max-height: 70vh;
+      object-fit: contain;
+      background: #000;
+    }
+    .video-caption { margin-top: 1.5rem; font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text-muted); opacity:0.6; }
+
+    /* RESPONSIVE */
+    @media (max-width:768px) {
+      nav { padding:1rem 1.5rem; }
+      .nav-links { gap:1.5rem; }
+      .gallery-masonry { grid-template-columns:repeat(4,1fr); grid-auto-rows:80px; }
+      .g1 { grid-column:1/5; grid-row:1/5; }
+      .g2 { grid-column:1/3; grid-row:5/9; }
+      .g3 { grid-column:3/5; grid-row:5/7; }
+      .g4 { grid-column:3/5; grid-row:7/9; }
+      .g5 { grid-column:1/3; grid-row:9/13; }
+      .g6 { grid-column:3/5; grid-row:9/13; }
+      .g7 { grid-column:1/3; grid-row:13/17; }
+      .g8 { grid-column:3/5; grid-row:13/17; }
+      .g9 { grid-column:1/5; grid-row:17/21; }
+      .specs-grid { grid-template-columns:1fr; }
+      .spec-row:nth-child(odd) { padding-right:0; }
+      .spec-row:nth-child(even) { padding-left:0; border-left:none; }
+      .points-grid { grid-template-columns:1fr; gap:2rem; }
+      .specs-header { flex-direction:column; align-items:flex-start; gap:1rem; }
+      footer { flex-direction:column; gap:1rem; text-align:center; }
+      .pres-blocks { grid-template-columns:1fr; padding:0 1.5rem; }
+      .pres-full { padding:0 1.5rem; }
+      .pres-full-inner { grid-template-columns:1fr; gap:2rem; padding:2.5rem; }
+      .pres-stats { grid-template-columns:repeat(2,1fr); padding:0 1.5rem; }
+    }
+  
+@media (max-width: 768px) {
+  body { overflow-x:hidden !important; }
+  nav {
+    padding: 0.8rem 1rem !important;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .nav-links{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:0.8rem !important;
+  }
+  .nav-links a{
+    font-size:0.65rem !important;
+    letter-spacing:0.08em !important;
+  }
+  .hero-title{
+    font-size:clamp(3rem,15vw,5rem) !important;
+    line-height:0.95 !important;
+  }
+  .hero-sub,.hero-eyebrow{
+    padding:0 1rem;
+  }
+  section, .presentation-intro, .statement{
+    padding-left:1rem !important;
+    padding-right:1rem !important;
+  }
+  .gallery-masonry{
+    grid-template-columns:1fr !important;
+    grid-auto-rows:auto !important;
+  }
+  .gallery-masonry > *{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    min-height:220px;
+  }
+  img{
+    max-width:100%;
+    height:auto;
+  }
+  .pres-stats{
+    grid-template-columns:1fr !important;
+  }
+  .pres-full-inner,
+  .specs-grid,
+  .points-grid{
+    grid-template-columns:1fr !important;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="cursor-glow"></div>
+
+<nav id="navbar">
+  <a href="#" class="nav-logo">3D Bike</a>
+  <ul class="nav-links">
+    <li><a href="#galerie">Galerie</a></li>
+    <li><a href="#video">Vidéo</a></li>
+    <li><a href="#specs">Specs</a></li>
+    <li><a href="#pourquoi">Le projet</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-spotlight"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">32 pouces — la nouvelle ère du vtt</p>
+    <h1 class="hero-title">PROJECT<span>32</span></h1>
+    <p class="hero-sub">Le VTT 32 pouces carbone</p>
+    <a href="#galerie" class="hero-cta">Découvrir</a>
+  </div>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<section class="statement">
+  <div class="statement-bg" id="statementBg"></div>
+  <p class="reveal">Certains verront un vélo.<br><em>Les autres comprendront.</em></p>
+  <div class="divider"></div>
+  <p class="reveal" style="font-size:1rem; opacity:0.5; letter-spacing:0.1em;">Un projet né de l'obsession de repousser les limites du possible.<br>Une roue de <em>32 pouces</em>. Un cadre carbone. vélo inédit .</p>
+</section>
+
+<section class="presentation">
+  <div class="presentation-intro">
+    <p class="section-label" style="margin-bottom:2rem;">Le format qui change tout</p>
+    <h2 class="reveal">Pourquoi le <span>32 pouces</span> ?</h2>
+    <p class="reveal">Dans l'histoire du vélo tout-terrain, les standards ont évolué lentement. Du 26 pouces au 27,5, puis au 29 pouces. À chaque transition, les riders ont découvert de <strong>nouvelles sensations, de nouvelles performances.</strong> Le Project 32 va plus loin. Beaucoup plus loin.</p>
+  </div>
+  <div class="pres-blocks">
+    <div class="pres-block reveal reveal-delay-1"><div class="pres-block-photo" style="background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193701/bike9_hyarxo.jpg')"></div><div class="pres-block-icon">↗</div><h3>Contact au sol supérieur</h3><p>Une roue de 32 pouces offre une surface de contact <strong>significativement plus grande</strong> qu'un 29 pouces classique. Traction incomparable, stabilité accrue dans les virages rapides.</p></div>
+    <div class="pres-block reveal reveal-delay-2"><div class="pres-block-photo" style="background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193448/bike1_a9qbt0.jpg')"></div><div class="pres-block-icon">◎</div><h3>Roulement inégalé</h3><p>La physique ne ment pas. Plus le diamètre est grand, <strong>plus l'angle d'attaque face aux obstacles est favorable.</strong> Les racines, les pierres — le 32 pouces les absorbe.</p></div>
+    <div class="pres-block reveal reveal-delay-3"><div class="pres-block-photo" style="background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike2_okhubr.jpg')"></div><div class="pres-block-icon">⬡</div><h3>Géométrie repensée</h3><p>Monter en 32 pouces ne se fait pas en remplaçant les roues. <strong>Tout le cadre a été repensé, recalculé, redessiné</strong> pour accueillir ce format inédit.</p></div>
+    <div class="pres-block reveal reveal-delay-4"><div class="pres-block-photo" style="background-image:url('https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike3_mu49ac.jpg')"></div><div class="pres-block-icon">✦</div><h3>Polyvalence extrême</h3><p>Sa <strong>capacité à avaler les terrains variés</strong> — pistes techniques, singles sinueux, montées longues — en fait un vélo véritablement polyvalent.</p></div>
+  </div>
+  <div class="pres-full">
+    <div class="pres-full-inner reveal">
+      <div class="pres-full-left"><h3>Une <span>première</span> mondiale.</h3><p>Cadre carbone sur-mesure</p></div>
+      <div class="pres-full-right">
+        <p>Avant le Project 32, <strong>personne n'avait jamais construit de VTT carbone en format 32 pouces.</strong> Les constructeurs ont jugé cela trop complexe. Nous avons prouvé le contraire.</p>
+        <p>Ce n'est pas un concept. C'est un vélo <strong>pleinement fonctionnel, roulant, testé sur le terrain</strong>, équipé des meilleurs composants disponibles.</p>
+      </div>
+    </div>
+  </div>
+  <div class="pres-stats">
+    <div class="pres-stat reveal"><div class="pres-stat-num">32"</div><div class="pres-stat-label">Format inédit</div></div>
+    <div class="pres-stat reveal"><div class="pres-stat-num">1200 g</div><div class="pres-stat-label">Poids du cadre</div></div>
+    <div class="pres-stat reveal"><div class="pres-stat-num">100%</div><div class="pres-stat-label">Carbone sur-mesure</div></div>
+    <div class="pres-stat reveal"><div class="pres-stat-num">∞</div><div class="pres-stat-label">Potentiel</div></div>
+  </div>
+</section>
+
+<section id="galerie">
+  <p class="section-label">Galerie — Project 32</p>
+  <div class="gallery-masonry" id="galleryGrid">
+    <div class="gal-item g1" onclick="openLightbox(0)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193448/bike1_a9qbt0.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Vue profil — Studio</div>
+    </div>
+    <div class="gal-item g2" onclick="openLightbox(1)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike2_okhubr.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Angle 3/4 arrière</div>
+    </div>
+    <div class="gal-item g3" onclick="openLightbox(2)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike3_mu49ac.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Lumière rasante</div>
+    </div>
+    <div class="gal-item g4" onclick="openLightbox(3)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike4_ap1gbc.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Détail tube</div>
+    </div>
+    <div class="gal-item g5" onclick="openLightbox(4)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193699/bike5_rkanbu.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Couleur or</div>
+    </div>
+    <div class="gal-item g6" onclick="openLightbox(5)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike6_fxyap0.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Cockpit — Project 32</div>
+    </div>
+    <div class="gal-item g7" onclick="openLightbox(6)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike7_a3xbpw.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Spotlight — Vue principale</div>
+    </div>
+    <div class="gal-item g8" onclick="openLightbox(7)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193700/bike8_l5d7ki.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Porte-bidon carbone</div>
+    </div>
+    <div class="gal-item g9" onclick="openLightbox(8)">
+      <img src="https://res.cloudinary.com/djjfrwxlt/image/upload/v1782193701/bike9_hyarxo.jpg" alt="3D Bike Project 32" />
+      <div class="gal-label">Rendu — édition or</div>
+    </div>
+  </div>
+</section>
+
+<section id="video">
+  <div id="video-photo-bg"></div>
+  <div class="video-inner">
+    <p class="section-label">En mouvement — Project 32</p>
+    <h2 class="reveal">Le <span>Project 32</span><br>en action</h2>
+    <p class="video-sub reveal">Première mondiale — VTT carbone 32 pouces</p>
+    <div class="video-wrapper reveal">
+      <iframe
+        src="https://player.cloudinary.com/embed/?cloud_name=djjfrwxlt&public_id=copy_2E24A538-8B2E-4895-A146-604D50E188AC_n4br7q&player[autoplay]=false&player[muted]=false&player[controls]=true&player[skin]=dark"
+        width="100%" height="100%"
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+        allowfullscreen
+        frameborder="0"
+        style="position:absolute;inset:0;width:100%;height:100%;"
+      ></iframe>
+    </div>
+    <p class="video-caption">Project 32 — 3D Bike — Édition unique</p>
+  </div>
+</section>
+  <div class="parallax-img" id="parallaxImg"></div>
+  <div class="parallax-text">
+    <h2>Un velo<br><span>unique en son genre</span></h2>
+    <p>32 pouces — la nouvelle ère </p>
+  </div>
+</div>
+
+<section id="specs">
+  <div id="specs-photo-bg"></div>
+  <div class="specs-header">
+    <h2 class="specs-title">Fiche<br><span>Technique</span></h2>
+    <div class="specs-badge">Project 32 — 3d bike</div>
+  </div>
+  <div class="specs-grid">
+    <div class="spec-row reveal"><span class="spec-key">Format roues</span><span class="spec-val gold">32 pouces</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Cadre</span><span class="spec-val">Carbone 3D Bike</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Fourche</span><span class="spec-val">Bright / Intend</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Groupe</span><span class="spec-val">Shimano XTR / SRAM XX</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Roues</span><span class="spec-val">Duke Carbone</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Pneus</span><span class="spec-val">Maxxis Aspen</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Potence</span><span class="spec-val">60 / -20°</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Porte-bidon</span><span class="spec-val">Carbone</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Coloris</span><span class="spec-val gold">Personnalisable</span></div>
+    <div class="spec-row reveal"><span class="spec-key">Poids</span><span class="spec-val gold">1200 g ( ultra light )</span></div>
+  </div>
+</section>
+
+<section id="pourquoi">
+  <div id="pourquoi-photo-bg"></div>
+  <div class="points-inner">
+    <p class="section-label">Pourquoi ce vélo</p>
+    <div class="points-grid">
+      <div class="point reveal"><div class="point-num">01</div><h3 class="point-title">3d bike</h3><p>Le Project 32 est un semi rigide VTT carbone monté en 32 pouces. Une géométrie pensée et calculée en France.</p></div>
+      <div class="point reveal"><div class="point-num">02</div><h3 class="point-title">Composants haut de gamme</h3><p>Groupe Shimano / sram, roues Duke carbone, fourche Brightt/intend carbone. Chaque pièce sélectionnée pour sa légèreté et ses performances.</p></div>
+      <div class="point reveal"><div class="point-num">03</div><h3 class="point-title">L'obsession du détail</h3><p>Des mois de travail pour créer quelque chose qui n'existait pas. Le Project 32 n'est pas un vélo — c'est un objet de collection.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="quote-section">
+  <div class="quote-bg"></div>
+  <div class="quote-mark">"</div>
+  <blockquote class="reveal">On ne fait pas des vélos basique.<br>On fait des velos<br><em>qui sont beaucoup plus rapides.</em></blockquote>
+  <cite>— 3D Bike, Project 32</cite>
+</section>
+
+<section id="contact">
+  <div id="contact-photo-bg"></div>
+  <div class="contact-inner">
+    <p class="section-label">Acquisition</p>
+    <h2 class="contact-title reveal">Intéressé par le<br><span>Project 32 ?</span></h2>
+    <p class="contact-sub reveal">Ce vélo est inédit. Pour toute demande d'information, de prix ou pour organiser une présentation, contactez directement le créateur.</p>
+    <a href="mailto:3d.piecesbike@gmail.com" class="contact-email">3d.piecesbike@gmail.com</a><br>
+    <a href="mailto:3d.piecesbike@gmail.com" class="contact-btn">Envoyer un message</a>
+    <p class="contact-note" style="margin-top:3rem;">Réponse dans les plus brefs delais — Livraison possible partout en Europe</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">3D Bike</div>
+  <p class="footer-copy">© 2025 3D Bike — Project 32 — </p>
+  <p class="footer-copy">Produit unique</p>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" onclick="closeLightbox()">Fermer ✕</span>
+  <div class="lightbox-nav">
+    <button class="lightbox-btn" onclick="lightboxNav(-1)">&#8592;</button>
+    <button class="lightbox-btn" onclick="lightboxNav(1)">&#8594;</button>
+  </div>
+  <img id="lightbox-img" src="" alt="3D Bike Project 32" />
+  <div class="lightbox-counter" id="lightbox-counter"></div>
+</div>
+
+<script>
+  /* ── Gallery images ── */
+  const galleryImages = [
+    'images/bike1.png',
+    'images/bike2.png',
+    'images/bike3.png',
+    'images/bike4.jpg',
+    'images/bike5.png',
+    'images/bike6.png',
+    'images/bike7.png',
+    'images/bike8.jpg',
+    'images/bike9.png',
+  ];
+  let currentIdx = 0;
+
+  function openLightbox(idx) {
+    currentIdx = idx;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function lightboxNav(dir) {
+    currentIdx = (currentIdx + dir + galleryImages.length) % galleryImages.length;
+    updateLightbox();
+  }
+  function updateLightbox() {
+    document.getElementById('lightbox-img').src = galleryImages[currentIdx];
+    document.getElementById('lightbox-counter').textContent = (currentIdx+1) + ' / ' + galleryImages.length;
+  }
+  document.getElementById('lightbox').addEventListener('click', function(e) {
+    if (e.target === this) closeLightbox();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxNav(-1);
+    if (e.key === 'ArrowRight') lightboxNav(1);
+  });
+
+  /* ── Scroll events ── */
+  const progressBar = document.getElementById('progress-bar');
+  const navbar = document.getElementById('navbar');
+  const heroBg = document.getElementById('heroBg');
+  const parallaxImg = document.getElementById('parallaxImg');
+  const statementBg = document.getElementById('statementBg');
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+
+    // Progress bar
+    progressBar.style.width = (scrollY / h * 100) + '%';
+
+    // Nav scroll state
+    navbar.classList.toggle('scrolled', scrollY > 60);
+
+    // Hero parallax
+    if (heroBg) heroBg.style.transform = 'scale(1.05) translateY(' + (scrollY * 0.15) + 'px)';
+
+    // Parallax banner
+    if (parallaxImg) {
+      const rect = parallaxImg.parentElement.getBoundingClientRect();
+      parallaxImg.style.transform = 'translateY(' + (-rect.top / window.innerHeight * 40) + 'px)';
+    }
+
+    // Statement bg subtle parallax
+    if (statementBg) {
+      const rect2 = statementBg.parentElement.getBoundingClientRect();
+      statementBg.style.transform = 'translateY(' + (-rect2.top / window.innerHeight * 20) + 'px)';
+    }
+  });
+
+  /* ── Cursor glow ── */
+  const cursorGlow = document.getElementById('cursor-glow');
+  document.addEventListener('mousemove', e => {
+    cursorGlow.style.left = e.clientX + 'px';
+    cursorGlow.style.top = e.clientY + 'px';
+  });
+
+  /* ── Hero tilt ── */
+  const heroSection = document.querySelector('.hero');
+  const heroContent = document.querySelector('.hero-content');
+  if (heroSection && heroContent) {
+    heroSection.addEventListener('mousemove', e => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth - 0.5) * 8;
+      const y = (e.clientY / innerHeight - 0.5) * 8;
+      heroContent.style.transition = 'transform 0.1s ease';
+      heroContent.style.transform = `translate(${x}px, ${y}px)`;
+    });
+    heroSection.addEventListener('mouseleave', () => {
+      heroContent.style.transition = 'transform 0.8s cubic-bezier(.23,1,.32,1)';
+      heroContent.style.transform = '';
+    });
+  }
+
+  /* ── Reveal on scroll ── */
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  /* ── Stats counter animation ── */
+  function animateCounter(el, target, suffix, duration) {
+    const startTime = performance.now();
+    const step = (now) => {
+      const p = Math.min((now - startTime) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * ease).toLocaleString('fr-FR') + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  const statsObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const el = e.target.querySelector('.pres-stat-num');
+        const text = el.textContent.trim();
+        if (text === '32"') animateCounter(el, 32, '"', 1200);
+        else if (text.includes('1200')) animateCounter(el, 1200, ' g', 1500);
+        else if (text === '100%') animateCounter(el, 100, '%', 1000);
+        statsObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll('.pres-stat').forEach(el => statsObs.observe(el));
+
+  /* ── Gallery fade-in on first view ── */
+  const galleryGrid = document.getElementById('galleryGrid');
+  if (galleryGrid) {
+    const galObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('loaded'); galObs.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+    galObs.observe(galleryGrid);
+  }
+
+  /* ── Active nav link ── */
+  const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+  const allSections = document.querySelectorAll('section[id]');
+  const sectionObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  allSections.forEach(s => sectionObs.observe(s));
+</script>
+
+</body>
+</html>
